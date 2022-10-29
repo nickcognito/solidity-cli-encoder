@@ -4,14 +4,18 @@ import inquirer from "inquirer";
 process.on('uncaughtException', () => {  console.log('\r\n', 'Unhandled Exception.. Exiting..', '\r\n'); process.exit()  });
 
 (async() => {
-    let iFace: ethers.utils.Interface = await getAbi();
+    let iFace: ethers.utils.Interface | string = await getAbi();
+    
+    if (typeof iFace === 'string') {
+        return console.log('\r\n', iFace);
+    }
 
     let functionData: string = await getFunctionParameters(iFace);
 
     console.log('\r\n', functionData, '\r\n');
 })();
 
-async function getAbi(): Promise<ethers.utils.Interface> {
+async function getAbi(): Promise<ethers.utils.Interface | string> {
 
     let iFace: ethers.utils.Interface;
 
@@ -30,7 +34,9 @@ async function getAbi(): Promise<ethers.utils.Interface> {
         return getAbi();
     }
 
-    return iFace;
+    let func = iFace.getFunction(abiInput)
+
+    return func.inputs.length == 0 ? iFace.getSighash(abiInput) : iFace;
 
 }
 
@@ -44,7 +50,15 @@ async function getFunctionParameters(iFace: ethers.utils.Interface): Promise<str
         message: 'Function arguments separated by comma. [arg1,arg2,arg3,..]',
     });
 
-    let params = prompt['function_params'].replace(' ', '').split(',');
+    let input = prompt['function_params'].replace(' ', '')
+    
+    let params: string[];
+
+    if (input !== '') {
+        params = input.split(',')
+    } else {
+        params = [];
+    }
 
     try {
         functionData = iFace.encodeFunctionData(Object.values(iFace.functions)[0], params);
