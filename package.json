@@ -12,7 +12,6 @@
   },
   "scripts": {
     "encode": "node ./dist/encode.js",
-    "test-encode": "ts-node ./src/encode.ts",
-    "help": "ts-node help.ts"
+    "test-encode": "ts-node ./src/encode.ts"
   }
 }
